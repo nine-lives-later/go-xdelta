@@ -169,7 +169,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 
 			headerData := make([]byte, length)
 
-			err = lib.CallToError(lib.DecoderCopyOutputData.Call(enc.handle, uintptr(unsafe.Pointer(&headerData[0]))))
+			err = lib.CallToError(lib.DecoderCopyHeaderData.Call(enc.handle, uintptr(unsafe.Pointer(&headerData[0]))))
 			if err != nil {
 				return fmt.Errorf("Failed to consume header from PATCH/output file: %v", err)
 			}

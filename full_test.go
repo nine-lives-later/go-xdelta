@@ -1,27 +1,27 @@
 package xdelta
 
 import (
-	"io"
+	"bytes"
 	"context"
 	"crypto/sha1"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
-	"bytes"
 
 	"github.com/dustin/go-humanize"
 )
 
 type testFullRoundtrip_Context struct {
-	FromFilePath  string
-	ToFilePath    string
-	PatchFilePath string
+	FromFilePath    string
+	ToFilePath      string
+	PatchFilePath   string
+	AppliedFilePath string
 
-	AppliedFilePath    string
-
+	Header     []byte // set during seeding
 	ToFileHash []byte
 }
 
@@ -39,10 +39,10 @@ func TestFullRoundtrip(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	ctx := &testFullRoundtrip_Context{
-		FromFilePath:  filepath.Join(tempDir, "from"),
-		ToFilePath:    filepath.Join(tempDir, "to"),
-		PatchFilePath: filepath.Join(tempDir, "patch"),
-		AppliedFilePath:    filepath.Join(tempDir, "to_applied"),
+		FromFilePath:    filepath.Join(tempDir, "from"),
+		ToFilePath:      filepath.Join(tempDir, "to"),
+		PatchFilePath:   filepath.Join(tempDir, "patch"),
+		AppliedFilePath: filepath.Join(tempDir, "to_applied"),
 	}
 
 	t.Run("Seed", func(t *testing.T) { testFullRoundtrip_Seed(t, ctx) })
@@ -104,6 +104,11 @@ func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
 		}
 	}
 
+	// seed header
+	ctx.Header = make([]byte, 7000+rand.Int31n(20000))
+
+	rand.Read(ctx.Header)
+
 	// done
 	ctx.ToFileHash = toHash.Sum(nil)
 
@@ -136,6 +141,7 @@ func testFullRoundtrip_CreatePatch(t *testing.T, ctx *testFullRoundtrip_Context)
 		FromFile:  fromFile,
 		ToFile:    toFile,
 		PatchFile: patchFile,
+		Header:    ctx.Header,
 	}
 
 	enc, err := NewEncoder(options)
@@ -180,7 +186,7 @@ func testFullRoundtrip_ApplyPatch(t *testing.T, ctx *testFullRoundtrip_Context) 
 	}
 	defer patchFile.Close()
 
-	// prepare encoder
+	// prepare decoder
 	options := DecoderOptions{
 		FileID:    "TestFullRoundtrip",
 		FromFile:  fromFile,
@@ -194,10 +200,21 @@ func testFullRoundtrip_ApplyPatch(t *testing.T, ctx *testFullRoundtrip_Context) 
 	}
 	defer dec.Close()
 
-	// create the patch
+	// retrieve header
+	headerChannel := make(chan []byte, 1)
+	dec.Header = headerChannel
+
+	// apply the patch
 	err = dec.Process(context.TODO())
 	if err != nil {
 		t.Fatalf("Failed to apply patch: %v", err)
+	}
+
+	// compare the header
+	readHeader := <-headerChannel
+
+	if !bytes.Equal(ctx.Header, readHeader) {
+		t.Fatalf("Header of PATCH file does not match")
 	}
 }
 
@@ -225,6 +242,6 @@ func testFullRoundtrip_CompareHash(t *testing.T, ctx *testFullRoundtrip_Context)
 	t.Logf("APPLIED file hash: %x", appliedHashResult)
 
 	if !bytes.Equal(ctx.ToFileHash, appliedHashResult) {
-		t.Fatalf("File has of TO and APPLIED file are different")
+		t.Fatalf("File hash of TO and APPLIED file are different")
 	}
 }
