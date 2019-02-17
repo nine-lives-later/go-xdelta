@@ -1,0 +1,6 @@
+{
+    "go.lintTool": "gometalinter",
+    "go.lintFlags": [
+        "--config=${workspaceRoot}/.gometalinter"
+    ]
+}

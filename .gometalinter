@@ -1,0 +1,6 @@
+{
+  "Exclude": [
+      "don't use underscores in Go names;",
+      "error strings should not be capitalized"
+      ]
+}

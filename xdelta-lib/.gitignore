@@ -1,0 +1,10 @@
+go-xdelta-lib.dll
+go-xdelta-lib.lib
+go-xdelta-lib.exp
+go-xdelta-lib.so
+
+*.obj
+*.o
+
+version.go
+debug.test
