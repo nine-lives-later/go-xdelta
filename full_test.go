@@ -2,6 +2,7 @@ package xdelta
 
 import (
 	"context"
+	"crypto/sha1"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -16,6 +17,8 @@ type testFullRoundtrip_Context struct {
 	FromFilePath  string
 	ToFilePath    string
 	PatchFilePath string
+
+	ToFileHash []byte
 }
 
 func TestFullRoundtrip(t *testing.T) {
@@ -76,6 +79,8 @@ func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
 		maxBlocks = toBlocks
 	}
 
+	toHash := sha1.New()
+
 	for block := 0; block < maxBlocks; block++ {
 		_, err := rand.Read(buf)
 		if err != nil {
@@ -88,8 +93,14 @@ func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
 
 		if (block%toSkipMod != 0) && (block < toBlocks) {
 			toFile.Write(buf)
+			toHash.Write(buf)
 		}
 	}
+
+	// done
+	ctx.ToFileHash = toHash.Sum(nil)
+
+	t.Logf("TO file hash: %x", ctx.ToFileHash)
 }
 
 func testFullRoundtrip_CreatePatch(t *testing.T, ctx *testFullRoundtrip_Context) {
