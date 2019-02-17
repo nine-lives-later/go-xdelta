@@ -1,6 +1,7 @@
 package xdelta
 
 import (
+	"io"
 	"context"
 	"crypto/sha1"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+	"bytes"
 
 	"github.com/dustin/go-humanize"
 )
@@ -17,6 +19,8 @@ type testFullRoundtrip_Context struct {
 	FromFilePath  string
 	ToFilePath    string
 	PatchFilePath string
+
+	AppliedFilePath    string
 
 	ToFileHash []byte
 }
@@ -38,11 +42,14 @@ func TestFullRoundtrip(t *testing.T) {
 		FromFilePath:  filepath.Join(tempDir, "from"),
 		ToFilePath:    filepath.Join(tempDir, "to"),
 		PatchFilePath: filepath.Join(tempDir, "patch"),
+		AppliedFilePath:    filepath.Join(tempDir, "to_applied"),
 	}
 
 	t.Run("Seed", func(t *testing.T) { testFullRoundtrip_Seed(t, ctx) })
 	t.Run("CreatePatch", func(t *testing.T) { testFullRoundtrip_CreatePatch(t, ctx) })
 	t.Run("DumpPatchInfo", func(t *testing.T) { testFullRoundtrip_DumpPatchInfo(t, ctx) })
+	t.Run("ApplyPatch", func(t *testing.T) { testFullRoundtrip_ApplyPatch(t, ctx) })
+	t.Run("CompareHash", func(t *testing.T) { testFullRoundtrip_CompareHash(t, ctx) })
 }
 
 func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
@@ -151,4 +158,73 @@ func testFullRoundtrip_DumpPatchInfo(t *testing.T, ctx *testFullRoundtrip_Contex
 	}
 
 	t.Logf("PATCH file size: %v (%v)", patchFileStat.Size(), humanize.Bytes(uint64(patchFileStat.Size())))
+}
+
+func testFullRoundtrip_ApplyPatch(t *testing.T, ctx *testFullRoundtrip_Context) {
+	// open the files
+	fromFile, err := os.Open(ctx.FromFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open FROM file: %v", err)
+	}
+	defer fromFile.Close()
+
+	appliedFile, err := os.Create(ctx.AppliedFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open APPLIED file: %v", err)
+	}
+	defer appliedFile.Close()
+
+	patchFile, err := os.Open(ctx.PatchFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open PATCH file: %v", err)
+	}
+	defer patchFile.Close()
+
+	// prepare encoder
+	options := DecoderOptions{
+		FileID:    "TestFullRoundtrip",
+		FromFile:  fromFile,
+		ToFile:    appliedFile,
+		PatchFile: patchFile,
+	}
+
+	dec, err := NewDecoder(options)
+	if err != nil {
+		t.Fatalf("Failed to apply encoder: %v", err)
+	}
+	defer dec.Close()
+
+	// create the patch
+	err = dec.Process(context.TODO())
+	if err != nil {
+		t.Fatalf("Failed to apply patch: %v", err)
+	}
+}
+
+func testFullRoundtrip_CompareHash(t *testing.T, ctx *testFullRoundtrip_Context) {
+	// open the files
+	appliedFile, err := os.Open(ctx.AppliedFilePath)
+	if err != nil {
+		t.Fatalf("Failed to open APPLIED file: %v", err)
+	}
+	defer appliedFile.Close()
+
+	// calculate hash
+	appliedHash := sha1.New()
+
+	_, err = io.Copy(appliedHash, appliedFile)
+	if err != nil {
+		t.Fatalf("Failed to hash APPLIED file: %v", err)
+	}
+
+	appliedFile.Close()
+
+	appliedHashResult := appliedHash.Sum(nil)
+
+	// compare
+	t.Logf("APPLIED file hash: %x", appliedHashResult)
+
+	if !bytes.Equal(ctx.ToFileHash, appliedHashResult) {
+		t.Fatalf("File has of TO and APPLIED file are different")
+	}
 }

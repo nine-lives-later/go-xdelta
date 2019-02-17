@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func testInitEncoderBase(t *testing.T, options EncoderOptions) {
-	enc, err := NewEncoder(options)
+func testInitDecoderBase(t *testing.T, options DecoderOptions) {
+	enc, err := NewDecoder(options)
 	if err != nil {
 		t.Fatalf("Failed to initialize: %v", err)
 	}
@@ -33,14 +33,13 @@ func testInitEncoderBase(t *testing.T, options EncoderOptions) {
 	}
 }
 
-func TestEncoderInitEmpty(t *testing.T) {
-	testInitEncoderBase(t, EncoderOptions{})
+func TestDecoderInitEmpty(t *testing.T) {
+	testInitDecoderBase(t, DecoderOptions{})
 }
 
-func TestEncoderInitFull(t *testing.T) {
-	testInitEncoderBase(t, EncoderOptions{
+func TestDecoderInitFull(t *testing.T) {
+	testInitDecoderBase(t, DecoderOptions{
 		FileID:      "test.file",
 		BlockSizeKB: 4096,
-		Header:      []byte(`{"myheader":true}`),
 	})
 }

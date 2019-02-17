@@ -4,7 +4,7 @@ setlocal
 
 call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 
-cl.exe /nologo /I src /MT /LD /GL /Fe:go-xdelta-lib.dll xdelta.cpp xdelta-encoder.cpp xdelta-go.cpp /link /RELEASE /LTCG /NOLOGO /VERSION:3.1
+cl.exe /nologo /I src /MT /LD /GL /Fe:go-xdelta-lib.dll xdelta.cpp xdelta-encoder.cpp xdelta-decoder.cpp xdelta-go-helpers.cpp xdelta-go-encoder.cpp xdelta-go-decoder.cpp /link /RELEASE /LTCG /NOLOGO /VERSION:3.1
 
 del /q go-xdelta-lib.lib go-xdelta-lib.exp *.obj
 
