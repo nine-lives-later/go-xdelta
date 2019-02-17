@@ -184,12 +184,12 @@ func (enc *Encoder) Process(ctx context.Context) error {
 
 			n, err := enc.sourceFile.Read(enc.sourceBuffer)
 			if err != nil {
-				return fmt.Errorf("Failed to read from TO/input file: %v", err)
+				return fmt.Errorf("Failed to read from FROM/source file: %v", err)
 			}
 
 			err = lib.CallToError(lib.EncoderProvideSourceData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.sourceBuffer[0])), uintptr(n)))
 			if err != nil {
-				return fmt.Errorf("Failed to consume data for PATCH/output file: %v", err)
+				return fmt.Errorf("Failed to provide data from FROM/source file: %v", err)
 			}
 			break
 
