@@ -1,4 +1,4 @@
-[submodule "./xdelta-lib/src"]
-	path = ./xdelta-lib/src
+[submodule "xdelta-lib/src"]
+	path = xdelta-lib/src
 	url = https://github.com/jmacd/xdelta.git
 	branch = release3_1_apl
