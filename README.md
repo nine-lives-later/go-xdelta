@@ -86,6 +86,15 @@ The native library is stored in the *xdelta-lib* sub-directory. To build it, run
 
 You can also obtain a pre-compiled version here: **TODO**
 
+## Build Status
+
+The current status of the *master* branch:
+
+| OS | Status |
+| --- | --- |
+| Windows AMD64 | [![Build status](https://ci.appveyor.com/api/projects/status/w8cqnh1a2a23kkov/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
+| Ubuntu 16 AMD64 | [![Build status](https://ci.appveyor.com/api/projects/status/907d9w99x0pvlf0k/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-d0wsq/branch/master) |
+
 ## Authors
 
 The library is sponsored by the [marvin + konsorten GmbH](http://www.konsorten.de).
