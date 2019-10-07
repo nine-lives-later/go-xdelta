@@ -3,7 +3,7 @@
 package lib
 
 // #cgo CFLAGS: -I src -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
-// #cgo CXXFLAGS: -I src -Wno-c++11-extensions -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
+// #cgo CXXFLAGS: -I src -Wno-c++11-extensions -Wno-literal-suffix -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
 //
 // #include <stdlib.h>
 //
