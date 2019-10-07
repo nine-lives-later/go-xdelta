@@ -1,3 +1,5 @@
+// +build !windows
+
 #include "xdelta.h"
 #include "xdelta-encoder.h"
 
