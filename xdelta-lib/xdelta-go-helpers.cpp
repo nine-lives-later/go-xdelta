@@ -1,5 +1,6 @@
 // +build !windows
 
+#include "xdelta-warnings.h"
 #include "xdelta.h"
 #include "xdelta-error.h"
 #include "xdelta-encoder.h"
