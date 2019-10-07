@@ -1,4 +1,4 @@
-// build +cgo
+// build +darwin +linux
 
 package lib
 

@@ -1,4 +1,12 @@
+// build +windows
+
 package lib
+
+import (
+	"fmt"
+	"syscall"
+	"unsafe"
+)
 
 var (
 	xdeltaDLL = syscall.NewLazyDLL(`.\go-xdelta-lib.dll`)
@@ -37,7 +45,7 @@ var (
 
 func NewEncoder() (unsafe.Pointer, error) {
 	var outHandle unsafe.Pointer
-	err := callToError(goXdeltaNewEncoder.Call(uintptr(&outHandle)))
+	err := callToError(goXdeltaNewEncoder.Call(uintptr(unsafe.Pointer(&outHandle))))
 	if err != nil {
 		return nil, err
 	}
@@ -46,12 +54,12 @@ func NewEncoder() (unsafe.Pointer, error) {
 }
 
 func FreeEncoder(handle unsafe.Pointer) error {
-	return callToError(goXdeltaFreeEncoder.Call(uintptr(&handle)))
+	return callToError(goXdeltaFreeEncoder.Call(uintptr(unsafe.Pointer(&handle))))
 }
 
 func EncoderGetStreamError(handle unsafe.Pointer) error {
 	var s uintptr
-	err := callToError(goXdeltaEncoderGetStreamError.Call(enc.handle, uintptr(unsafe.Pointer(&s))))
+	err := callToError(goXdeltaEncoderGetStreamError.Call(uintptr(handle), uintptr(unsafe.Pointer(&s))))
 	if err != nil {
 		return err
 	}
@@ -68,16 +76,16 @@ func EncoderInit(handle unsafe.Pointer, blockSizeKB int, fileId string, hasSourc
 		hasSourceInt = 1
 	}
 
-	return lib.callToError(goXdeltaEncoderInit.Call(handle, uintptr(options.BlockSizeKB), fromString(options.FileID), hasSourceInt))
+	return callToError(goXdeltaEncoderInit.Call(uintptr(handle), uintptr(blockSizeKB), fromString(fileId), hasSourceInt))
 }
 
 func EncoderSetHeader(handle unsafe.Pointer, data unsafe.Pointer, dataLen int) error {
-	return lib.callToError(goXdeltaEncoderSetHeader.Call(enc.handle, uintptr(data), uintptr(dataLen)))
+	return callToError(goXdeltaEncoderSetHeader.Call(uintptr(handle), uintptr(data), uintptr(dataLen)))
 }
 
 func EncoderProcess(handle unsafe.Pointer) (XdeltaState, error) {
-	var state lib.XdeltaState
-	err := lib.callToError(goXdeltaEncoderProcess.Call(handle, uintptr(unsafe.Pointer(&state))))
+	var state XdeltaState
+	err := callToError(goXdeltaEncoderProcess.Call(uintptr(handle), uintptr(unsafe.Pointer(&state))))
 	if err != nil {
 		return XdeltaState_SeeGoError, err
 	}
@@ -91,12 +99,12 @@ func EncoderProvideInputData(handle unsafe.Pointer, data unsafe.Pointer, dataLen
 		isFinalInt = 1
 	}
 
-	return lib.callToError(lib.goXdeltaEncoderProvideInputData.Call(handle, uintptr(unsafe.Pointer(&data[0])), uintptr(dataLen), isFinal))
+	return callToError(goXdeltaEncoderProvideInputData.Call(uintptr(handle), uintptr(data), uintptr(dataLen), isFinalInt))
 }
 
 func EncoderGetOutputRequest(handle unsafe.Pointer) (int, error) {
 	var length int
-	err := lib.callToError(goXdeltaEncoderGetOutputRequest.Call(handle, uintptr(unsafe.Pointer(&length))))
+	err := callToError(goXdeltaEncoderGetOutputRequest.Call(uintptr(handle), uintptr(unsafe.Pointer(&length))))
 	if err != nil {
 		return -1, err
 	}
@@ -105,12 +113,12 @@ func EncoderGetOutputRequest(handle unsafe.Pointer) (int, error) {
 }
 
 func EncoderCopyOutputData(handle unsafe.Pointer, destBuffer unsafe.Pointer) error {
-	return lib.callToError(lib.goXdeltaEncoderCopyOutputData.Call(handle, uintptr(destBuffer)))
+	return callToError(goXdeltaEncoderCopyOutputData.Call(uintptr(handle), uintptr(destBuffer)))
 }
 
 func EncoderGetSourceRequest(handle unsafe.Pointer) (int, int, error) {
 	var blockno, blocksize int
-	err := lib.callToError(goXdeltaEncoderGetSourceRequest.Call(enc.handle, uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
+	err := callToError(goXdeltaEncoderGetSourceRequest.Call(uintptr(handle), uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
 	if err != nil {
 		return -1, 0, err
 	}
@@ -119,12 +127,12 @@ func EncoderGetSourceRequest(handle unsafe.Pointer) (int, int, error) {
 }
 
 func EncoderProvideSourceData(handle unsafe.Pointer, data unsafe.Pointer, dataLen int) error {
-	return lib.callToError(goXdeltaEncoderProvideSourceData.Call(enc.handle, uintptr(data), uintptr(dataLen)))
+	return callToError(goXdeltaEncoderProvideSourceData.Call(uintptr(handle), uintptr(data), uintptr(dataLen)))
 }
 
 func NewDecoder() (unsafe.Pointer, error) {
 	var outHandle unsafe.Pointer
-	err := callToError(goXdeltaNewDecoder.Call(uintptr(&outHandle)))
+	err := callToError(goXdeltaNewDecoder.Call(uintptr(unsafe.Pointer(&outHandle))))
 	if err != nil {
 		return nil, err
 	}
@@ -133,12 +141,12 @@ func NewDecoder() (unsafe.Pointer, error) {
 }
 
 func FreeDecoder(handle unsafe.Pointer) error {
-	return callToError(goXdeltaFreeDecoder.Call(uintptr(&handle)))
+	return callToError(goXdeltaFreeDecoder.Call(uintptr(unsafe.Pointer(&handle))))
 }
 
 func DecoderGetStreamError(handle unsafe.Pointer) error {
 	var s uintptr
-	err := callToError(lib.goXdeltaDecoderGetStreamError.Call(enc.handle, uintptr(unsafe.Pointer(&s))))
+	err := callToError(goXdeltaDecoderGetStreamError.Call(uintptr(handle), uintptr(unsafe.Pointer(&s))))
 	if err != nil {
 		return err
 	}
@@ -155,12 +163,12 @@ func DecoderInit(handle unsafe.Pointer, blockSizeKB int, fileId string, hasSourc
 		hasSourceInt = 1
 	}
 
-	return lib.callToError(goXdeltaDecoderInit.Call(handle, uintptr(options.BlockSizeKB), fromString(options.FileID), hasSourceInt))
+	return callToError(goXdeltaDecoderInit.Call(uintptr(handle), uintptr(blockSizeKB), fromString(fileId), hasSourceInt))
 }
 
 func DecoderProcess(handle unsafe.Pointer) (XdeltaState, error) {
-	var state lib.XdeltaState
-	err := lib.callToError(goXdeltaDecoderProcess.Call(handle, uintptr(unsafe.Pointer(&state))))
+	var state XdeltaState
+	err := callToError(goXdeltaDecoderProcess.Call(uintptr(handle), uintptr(unsafe.Pointer(&state))))
 	if err != nil {
 		return XdeltaState_SeeGoError, err
 	}
@@ -174,12 +182,12 @@ func DecoderProvideInputData(handle unsafe.Pointer, data unsafe.Pointer, dataLen
 		isFinalInt = 1
 	}
 
-	return lib.callToError(lib.goXdeltaDecoderProvideInputData.Call(handle, uintptr(unsafe.Pointer(&data[0])), uintptr(dataLen), isFinal))
+	return callToError(goXdeltaDecoderProvideInputData.Call(uintptr(handle), uintptr(data), uintptr(dataLen), isFinalInt))
 }
 
 func DecoderGetOutputRequest(handle unsafe.Pointer) (int, error) {
 	var length int
-	err := lib.callToError(goXdeltaDecoderGetOutputRequest.Call(handle, uintptr(unsafe.Pointer(&length))))
+	err := callToError(goXdeltaDecoderGetOutputRequest.Call(uintptr(handle), uintptr(unsafe.Pointer(&length))))
 	if err != nil {
 		return -1, err
 	}
@@ -188,12 +196,12 @@ func DecoderGetOutputRequest(handle unsafe.Pointer) (int, error) {
 }
 
 func DecoderCopyOutputData(handle unsafe.Pointer, destBuffer unsafe.Pointer) error {
-	return lib.callToError(lib.goXdeltaDecoderCopyOutputData.Call(handle, uintptr(destBuffer)))
+	return callToError(goXdeltaDecoderCopyOutputData.Call(uintptr(handle), uintptr(destBuffer)))
 }
 
 func DecoderGetHeaderRequest(handle unsafe.Pointer) (int, error) {
 	var length int
-	err := lib.callToError(goXdeltaDecoderGetHeaderRequest.Call(handle, uintptr(unsafe.Pointer(&length))))
+	err := callToError(goXdeltaDecoderGetHeaderRequest.Call(uintptr(handle), uintptr(unsafe.Pointer(&length))))
 	if err != nil {
 		return -1, err
 	}
@@ -202,12 +210,12 @@ func DecoderGetHeaderRequest(handle unsafe.Pointer) (int, error) {
 }
 
 func DecoderCopyHeaderData(handle unsafe.Pointer, destBuffer unsafe.Pointer) error {
-	return lib.callToError(goXdeltaDecoderCopyHeaderData.Call(handle, uintptr(destBuffer)))
+	return callToError(goXdeltaDecoderCopyHeaderData.Call(uintptr(handle), uintptr(destBuffer)))
 }
 
 func DecoderGetSourceRequest(handle unsafe.Pointer) (int, int, error) {
 	var blockno, blocksize int
-	err := lib.callToError(goXdeltaDecoderGetSourceRequest.Call(enc.handle, uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
+	err := callToError(goXdeltaDecoderGetSourceRequest.Call(uintptr(handle), uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
 	if err != nil {
 		return -1, 0, err
 	}
@@ -216,7 +224,7 @@ func DecoderGetSourceRequest(handle unsafe.Pointer) (int, int, error) {
 }
 
 func DecoderProvideSourceData(handle unsafe.Pointer, data unsafe.Pointer, dataLen int) error {
-	return callToError(goXdeltaDecoderProvideSourceData.Call(enc.handle, uintptr(data), uintptr(dataLen)))
+	return callToError(goXdeltaDecoderProvideSourceData.Call(uintptr(handle), uintptr(data), uintptr(dataLen)))
 }
 
 func toError(ret uintptr) error {

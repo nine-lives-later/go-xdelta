@@ -1,5 +1,3 @@
-// +build cgo
-
 #include "xdelta.h"
 #include "xdelta-decoder.h"
 #include <cstring>
