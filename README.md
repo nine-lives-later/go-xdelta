@@ -84,7 +84,7 @@ To build it, run the build script. The native library is saved in the *xdelta-li
 
 `./xdelta-lib/build-windows.bat`
 
-You can also obtain a [pre-compiled version](https://ci.appveyor.com/project/fkollmann/go-xdelta/build/artifacts).
+You can also obtain a [pre-compiled version](https://github.com/konsorten/go-xdelta/releases).
 
 ## Build Status
 
