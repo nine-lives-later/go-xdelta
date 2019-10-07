@@ -1,4 +1,4 @@
-// +build ignore
+// +build cgo
 
 // disable some warnings
 #ifdef _MSC_VER

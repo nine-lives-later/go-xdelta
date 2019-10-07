@@ -1,7 +1,8 @@
-// +build ignore
+// +build cgo
 
 #include "xdelta.h"
 #include "xdelta-decoder.h"
+#include <cstring>
 
 XdeltaError XdeltaDecoder::init(int blockSizeKB, const char* fileId, bool hasSource) {
     if (blockSizeKB < 0)

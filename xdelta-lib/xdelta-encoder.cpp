@@ -1,4 +1,4 @@
-// +build ignore
+// +build cgo
 
 #include "xdelta.h"
 #include "xdelta-encoder.h"

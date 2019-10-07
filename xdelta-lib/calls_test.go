@@ -5,7 +5,7 @@ import (
 )
 
 func TestReturnErrorNotImplemented(t *testing.T) {
-	err := CallToError(testReturnErrorNotImplemented.Call())
+	err := callToError(testReturnErrorNotImplemented.Call())
 	if err != nil {
 		if err == XdeltaError_NotImplemented {
 			return

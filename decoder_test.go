@@ -9,7 +9,7 @@ func testInitDecoderBase(t *testing.T, options DecoderOptions) {
 	if err != nil {
 		t.Fatalf("Failed to initialize: %v", err)
 	}
-	if enc.handle == 0 {
+	if enc.handle == nil {
 		t.Fatalf("Handle is expected to be valid after init")
 	}
 
@@ -22,7 +22,7 @@ func testInitDecoderBase(t *testing.T, options DecoderOptions) {
 	if err != nil {
 		t.Errorf("Failed to close: %v", err)
 	}
-	if enc.handle != 0 {
+	if enc.handle != nil {
 		t.Errorf("Handle is expected to be 0 after close")
 	}
 

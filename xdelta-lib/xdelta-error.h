@@ -10,6 +10,7 @@ enum {
 
 	XdeltaError_ArgumentNull = 101,
 	XdeltaError_ArgumentOutOfRange = 102,
+	XdeltaError_SeeGoError = 103,
 
 	/* native Xdelta errors: */
 	XdeltaError_Input               = XD3_INPUT,

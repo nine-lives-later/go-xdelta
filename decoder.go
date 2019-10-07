@@ -13,7 +13,7 @@ import (
 type Decoder struct {
 	io.Closer
 
-	handle     uintptr
+	handle     unsafe.Pointer
 	inputFile  io.Reader
 	sourceFile io.ReadSeeker
 	outputFile io.Writer
@@ -36,8 +36,7 @@ type DecoderOptions struct {
 
 func NewDecoder(options DecoderOptions) (*Decoder, error) {
 	// create the new decoder
-	var handle uintptr
-	err := lib.CallToError(lib.NewDecoder.Call(uintptr(unsafe.Pointer(&handle))))
+	handle, err := lib.NewDecoder()
 	if err != nil {
 		return nil, err
 	}
@@ -47,14 +46,9 @@ func NewDecoder(options DecoderOptions) (*Decoder, error) {
 		options.BlockSizeKB = (8 * 1024) // 8 MB
 	}
 
-	var hasSource uintptr
-	if options.FromFile != nil {
-		hasSource = 1
-	}
-
-	err = lib.CallToError(lib.DecoderInit.Call(handle, uintptr(options.BlockSizeKB), lib.FromString(options.FileID), hasSource))
+	err = lib.DecoderInit(handle, options.BlockSizeKB, options.FileID, options.FromFile != nil)
 	if err != nil {
-		lib.FreeDecoder.Call(uintptr(unsafe.Pointer(&handle)))
+		lib.FreeDecoder(handle)
 
 		return nil, err
 	}
@@ -80,25 +74,15 @@ func NewDecoder(options DecoderOptions) (*Decoder, error) {
 }
 
 func (enc *Decoder) GetStreamError() error {
-	var s uintptr
-	err := lib.CallToError(lib.DecoderGetStreamError.Call(enc.handle, uintptr(unsafe.Pointer(&s))))
-	if err != nil {
-		return err
-	}
-	if s == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("%v", lib.ToString(s, true))
+	return lib.DecoderGetStreamError(enc.handle)
 }
 
 func (enc *Decoder) Process(ctx context.Context) error {
-	var isFinal uintptr
+	var isFinal bool
 
 	for {
 		// retrieve the current state
-		var state lib.XdeltaState
-		err := lib.CallToError(lib.DecoderProcess.Call(enc.handle, uintptr(unsafe.Pointer(&state))))
+		state, err := lib.DecoderProcess(enc.handle)
 		if err != nil {
 			return err
 		}
@@ -106,7 +90,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 		switch state {
 		case lib.XdeltaState_INPUT:
 			// done?
-			if isFinal != 0 {
+			if isFinal {
 				return nil
 			}
 
@@ -117,18 +101,17 @@ func (enc *Decoder) Process(ctx context.Context) error {
 			}
 
 			if n <= 0 { // no more data?
-				isFinal = 1
+				isFinal = true
 			}
 
-			err = lib.CallToError(lib.DecoderProvideInputData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.inputBuffer[0])), uintptr(n), isFinal))
+			err = lib.DecoderProvideInputData(enc.handle, unsafe.Pointer(&enc.inputBuffer[0]), n, isFinal)
 			if err != nil {
 				return fmt.Errorf("Failed to provide data from TO/input file: %v", err)
 			}
 			break
 
 		case lib.XdeltaState_OUTPUT:
-			var length int
-			err := lib.CallToError(lib.DecoderGetOutputRequest.Call(enc.handle, uintptr(unsafe.Pointer(&length))))
+			length, err := lib.DecoderGetOutputRequest(enc.handle)
 			if err != nil {
 				return fmt.Errorf("Failed to request data for PATCH/output file: %v", err)
 			}
@@ -139,7 +122,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to consume data for PATCH/output file: output buffer overflow")
 			}
 
-			err = lib.CallToError(lib.DecoderCopyOutputData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.outputBuffer[0]))))
+			err = lib.DecoderCopyOutputData(enc.handle, unsafe.Pointer(&enc.outputBuffer[0]))
 			if err != nil {
 				return fmt.Errorf("Failed to consume data for PATCH/output file: %v", err)
 			}
@@ -158,8 +141,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 				break
 			}
 
-			var length int
-			err := lib.CallToError(lib.DecoderGetHeaderRequest.Call(enc.handle, uintptr(unsafe.Pointer(&length))))
+			length, err := lib.DecoderGetHeaderRequest(enc.handle)
 			if err != nil {
 				return fmt.Errorf("Failed to request header from PATCH/output file: %v", err)
 			}
@@ -169,7 +151,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 
 			headerData := make([]byte, length)
 
-			err = lib.CallToError(lib.DecoderCopyHeaderData.Call(enc.handle, uintptr(unsafe.Pointer(&headerData[0]))))
+			err = lib.DecoderCopyHeaderData(enc.handle, unsafe.Pointer(&headerData[0]))
 			if err != nil {
 				return fmt.Errorf("Failed to consume header from PATCH/output file: %v", err)
 			}
@@ -182,8 +164,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to request data for FROM/source file: not available")
 			}
 
-			var blockno, blocksize int
-			err := lib.CallToError(lib.DecoderGetSourceRequest.Call(enc.handle, uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
+			blockno, blocksize, err := lib.DecoderGetSourceRequest(enc.handle)
 			if err != nil {
 				return fmt.Errorf("Failed to request data for FROM/source file: %v", err)
 			}
@@ -201,7 +182,7 @@ func (enc *Decoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to read from FROM/source file: %v", err)
 			}
 
-			err = lib.CallToError(lib.DecoderProvideSourceData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.sourceBuffer[0])), uintptr(n)))
+			err = lib.DecoderProvideSourceData(enc.handle, unsafe.Pointer(&enc.sourceBuffer[0]), n)
 			if err != nil {
 				return fmt.Errorf("Failed to provide data from FROM/source file: %v", err)
 			}
@@ -227,12 +208,13 @@ func (enc *Decoder) Close() error {
 	return freeDecoder(enc)
 }
 
-func freeDecoder(enc *Decoder) error {
+func freeDecoder(enc *Decoder) (err error) {
 	// nothing to do?
-	if enc == nil || enc.handle == 0 {
-		return nil
+	if enc == nil || enc.handle == nil {
+		return
 	}
 
-	// create the new decoder
-	return lib.CallToError(lib.FreeDecoder.Call(uintptr(unsafe.Pointer(&enc.handle))))
+	err = lib.FreeDecoder(enc.handle)
+	enc.handle = nil
+	return
 }

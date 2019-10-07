@@ -1,16 +1,11 @@
-// +build ignore
+// +build cgo
 
 #include "xdelta.h"
 #include "xdelta-error.h"
 #include "xdelta-encoder.h"
+#include "xdelta-decls.h"
 
-#ifdef _WIN32
-    #define DECLSPEC extern "C" __declspec(dllexport)
-    #define DECL __cdecl
-#else
-    #define DECLSPEC extern "C" 
-    #define DECL __cdecl
-#endif
+extern "C" {
 
 DECLSPEC XdeltaError DECL goXdeltaGetStringLength(char* ptr, int* len)
 {
@@ -55,3 +50,4 @@ DECLSPEC XdeltaError DECL goXdeltaTestReturnErrorNotImplemented()
     return XD3_UNIMPLEMENTED;
 }
 
+}
