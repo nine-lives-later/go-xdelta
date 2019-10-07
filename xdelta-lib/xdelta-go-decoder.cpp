@@ -1,16 +1,12 @@
-// +build ignore
+// +build !windows
 
+#include "xdelta-warnings.h"
 #include "xdelta.h"
 #include "xdelta-error.h"
 #include "xdelta-decoder.h"
+#include "xdelta-decls.h"
 
-#ifdef _WIN32
-    #define DECLSPEC extern "C" __declspec(dllexport)
-    #define DECL __cdecl
-#else
-    #define DECLSPEC extern "C" 
-    #define DECL __cdecl
-#endif
+extern "C" {
 
 DECLSPEC XdeltaError DECL goXdeltaNewDecoder(XdeltaDecoder** ptr)
 {
@@ -116,4 +112,6 @@ DECLSPEC XdeltaError DECL goXdeltaDecoderCopyOutputData(XdeltaDecoder* ptr, char
         return XdeltaError_ArgumentNull;
 
     return ptr->copyOutputData(data);
+}
+
 }

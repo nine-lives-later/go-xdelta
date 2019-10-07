@@ -196,7 +196,7 @@ func testFullRoundtrip_ApplyPatch(t *testing.T, ctx *testFullRoundtrip_Context) 
 
 	dec, err := NewDecoder(options)
 	if err != nil {
-		t.Fatalf("Failed to apply encoder: %v", err)
+		t.Fatalf("Failed to create decoder: %v", err)
 	}
 	defer dec.Close()
 

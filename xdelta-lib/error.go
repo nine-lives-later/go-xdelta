@@ -2,7 +2,6 @@ package lib
 
 import (
 	"fmt"
-	"syscall"
 )
 
 type XdeltaState int32
@@ -20,6 +19,8 @@ const (
 	XdeltaState_INVALID_INPUT XdeltaState = -17712 /* invalid input/decoder error */
 	XdeltaState_NOSECOND      XdeltaState = -17713 /* when secondary compression finds no improvement. */
 	XdeltaState_UNIMPLEMENTED XdeltaState = -17714 /* currently VCD_TARGET, VCD_CODETABLE */
+
+	XdeltaState_SeeGoError XdeltaState = -17800 /* an error happend, see the returned Go error */
 )
 
 type XdeltaError int32
@@ -40,6 +41,7 @@ const (
 	XdeltaError_InvalidInput        XdeltaError = XdeltaError(XdeltaState_INVALID_INPUT)
 	XdeltaError_NoSecondCompression XdeltaError = XdeltaError(XdeltaState_NOSECOND)
 	XdeltaError_NotImplemented      XdeltaError = XdeltaError(XdeltaState_UNIMPLEMENTED)
+	XdeltaError_SeeGoError    XdeltaError = XdeltaError(XdeltaState_SeeGoError)
 )
 
 func (e XdeltaError) Error() string {
@@ -74,30 +76,9 @@ func (e XdeltaError) Error() string {
 		return "secondary compression finds no improvement"
 	case XdeltaError_NotImplemented:
 		return "not implemented (VCD_TARGET, VCD_CODETABLE)"
+	case XdeltaError_SeeGoError:
+		return "see Go returned error"
 	}
 
 	return fmt.Sprintf("Unknown error code: %v", int(e))
-}
-
-func toError(ret uintptr) error {
-	r := XdeltaError(ret)
-
-	if r == XdeltaError_OK {
-		return nil
-	}
-
-	return r
-}
-
-func CallToError(r1, r2 uintptr, err error) error {
-	if err != nil {
-		if errNo, ok := err.(syscall.Errno); ok {
-			if errNo == 0 /* no error */ {
-				return toError(r1)
-			}
-		}
-		return err
-	}
-
-	return toError(r1)
 }

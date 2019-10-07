@@ -13,7 +13,7 @@ import (
 type Encoder struct {
 	io.Closer
 
-	handle     uintptr
+	handle     unsafe.Pointer
 	inputFile  io.Reader
 	sourceFile io.ReadSeeker
 	patchFile  io.Writer
@@ -36,8 +36,7 @@ type EncoderOptions struct {
 
 func NewEncoder(options EncoderOptions) (*Encoder, error) {
 	// create the new encoder
-	var handle uintptr
-	err := lib.CallToError(lib.NewEncoder.Call(uintptr(unsafe.Pointer(&handle))))
+	handle, err := lib.NewEncoder()
 	if err != nil {
 		return nil, err
 	}
@@ -47,23 +46,18 @@ func NewEncoder(options EncoderOptions) (*Encoder, error) {
 		options.BlockSizeKB = (8 * 1024) // 8 MB
 	}
 
-	var hasSource uintptr
-	if options.FromFile != nil {
-		hasSource = 1
-	}
-
-	err = lib.CallToError(lib.EncoderInit.Call(handle, uintptr(options.BlockSizeKB), lib.FromString(options.FileID), hasSource))
+	err = lib.EncoderInit(handle, options.BlockSizeKB, options.FileID, options.FromFile != nil)
 	if err != nil {
-		lib.FreeEncoder.Call(uintptr(unsafe.Pointer(&handle)))
+		lib.FreeEncoder(handle)
 
 		return nil, err
 	}
 
 	// set header
 	if options.Header != nil {
-		err = lib.CallToError(lib.EncoderSetHeader.Call(handle, uintptr(unsafe.Pointer(&options.Header[0])), uintptr(len(options.Header))))
+		err = lib.EncoderSetHeader(handle, unsafe.Pointer(&options.Header[0]), len(options.Header))
 		if err != nil {
-			lib.FreeEncoder.Call(uintptr(unsafe.Pointer(&handle)))
+			lib.FreeEncoder(handle)
 
 			return nil, err
 		}
@@ -90,25 +84,15 @@ func NewEncoder(options EncoderOptions) (*Encoder, error) {
 }
 
 func (enc *Encoder) GetStreamError() error {
-	var s uintptr
-	err := lib.CallToError(lib.EncoderGetStreamError.Call(enc.handle, uintptr(unsafe.Pointer(&s))))
-	if err != nil {
-		return err
-	}
-	if s == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("%v", lib.ToString(s, true))
+	return lib.EncoderGetStreamError(enc.handle)
 }
 
 func (enc *Encoder) Process(ctx context.Context) error {
-	var isFinal uintptr
+	var isFinal bool
 
 	for {
 		// retrieve the current state
-		var state lib.XdeltaState
-		err := lib.CallToError(lib.EncoderProcess.Call(enc.handle, uintptr(unsafe.Pointer(&state))))
+		state, err := lib.EncoderProcess(enc.handle)
 		if err != nil {
 			return err
 		}
@@ -116,7 +100,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 		switch state {
 		case lib.XdeltaState_INPUT:
 			// done?
-			if isFinal != 0 {
+			if isFinal {
 				return nil
 			}
 
@@ -127,18 +111,17 @@ func (enc *Encoder) Process(ctx context.Context) error {
 			}
 
 			if n <= 0 { // no more data?
-				isFinal = 1
+				isFinal = true
 			}
 
-			err = lib.CallToError(lib.EncoderProvideInputData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.inputBuffer[0])), uintptr(n), isFinal))
+			err = lib.EncoderProvideInputData(enc.handle, unsafe.Pointer(&enc.inputBuffer[0]), n, isFinal)
 			if err != nil {
 				return fmt.Errorf("Failed to provide data from TO/input file: %v", err)
 			}
 			break
 
 		case lib.XdeltaState_OUTPUT:
-			var length int
-			err := lib.CallToError(lib.EncoderGetOutputRequest.Call(enc.handle, uintptr(unsafe.Pointer(&length))))
+			length, err := lib.EncoderGetOutputRequest(enc.handle)
 			if err != nil {
 				return fmt.Errorf("Failed to request data for PATCH/output file: %v", err)
 			}
@@ -149,7 +132,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to consume data for PATCH/output file: output buffer overflow")
 			}
 
-			err = lib.CallToError(lib.EncoderCopyOutputData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.outputBuffer[0]))))
+			err = lib.EncoderCopyOutputData(enc.handle, unsafe.Pointer(&enc.outputBuffer[0]))
 			if err != nil {
 				return fmt.Errorf("Failed to consume data for PATCH/output file: %v", err)
 			}
@@ -168,8 +151,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to request data for FROM/source file: not available")
 			}
 
-			var blockno, blocksize int
-			err := lib.CallToError(lib.EncoderGetSourceRequest.Call(enc.handle, uintptr(unsafe.Pointer(&blockno)), uintptr(unsafe.Pointer(&blocksize))))
+			blockno, blocksize, err := lib.EncoderGetSourceRequest(enc.handle)
 			if err != nil {
 				return fmt.Errorf("Failed to request data for FROM/source file: %v", err)
 			}
@@ -187,7 +169,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to read from FROM/source file: %v", err)
 			}
 
-			err = lib.CallToError(lib.EncoderProvideSourceData.Call(enc.handle, uintptr(unsafe.Pointer(&enc.sourceBuffer[0])), uintptr(n)))
+			err = lib.EncoderProvideSourceData(enc.handle,unsafe.Pointer(&enc.sourceBuffer[0]), n)
 			if err != nil {
 				return fmt.Errorf("Failed to provide data from FROM/source file: %v", err)
 			}
@@ -213,12 +195,14 @@ func (enc *Encoder) Close() error {
 	return freeEncoder(enc)
 }
 
-func freeEncoder(enc *Encoder) error {
+func freeEncoder(enc *Encoder) (err error) {
 	// nothing to do?
-	if enc == nil || enc.handle == 0 {
-		return nil
+	if enc == nil || enc.handle == nil {
+		return
 	}
 
-	// create the new encoder
-	return lib.CallToError(lib.FreeEncoder.Call(uintptr(unsafe.Pointer(&enc.handle))))
+	err = lib.FreeEncoder(enc.handle)
+
+	enc.handle = nil
+	return
 }

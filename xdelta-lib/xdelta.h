@@ -14,13 +14,15 @@
     #define XD3_DEBUG 1
 #endif
 
-#ifdef _WIN64
+#if defined(_WIN64) || defined(__LP64__)
     #define SIZEOF_SIZE_T 8
     #define SIZEOF_UNSIGNED_LONG_LONG 8
 #else
     #define SIZEOF_SIZE_T 4
     #define SIZEOF_UNSIGNED_LONG_LONG 8
 #endif
+
+#define _ALLOW_KEYWORD_MACROS // disable fatal error C1189: The C++ Standard Library forbids macroizing keywords. Enable warning C4005 to find the forbidden macro.
 
 extern "C" {
 

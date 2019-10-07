@@ -8,6 +8,10 @@ import (
 	"testing"
 )
 
+const (
+	xdeltaLibDLLSource = "./xdelta-lib/go-xdelta-lib.dll"
+)
+
 func TestMain(m *testing.M) {
 	dll, err := ioutil.ReadFile(xdeltaLibDLLSource)
 	if err != nil {

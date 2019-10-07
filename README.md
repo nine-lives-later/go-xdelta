@@ -76,15 +76,15 @@ To run all the tests (including a patch roundtrip test), run the following comma
 go test -v
 ```
 
-## Native Library
+## Native Library (Windows only)
 
-The native library is stored in the *xdelta-lib* sub-directory. To build it, run the appropiate build script for the desired platform:
+On Windows, no CGO is used. Instead the native library has to be built separately and provided in your project's directory.
 
-| Platform | Script |
-| --- | --- |
-| Windows | `./xdelta-lib/build-windows.bat` |
+To build it, run the build script. The native library is saved in the *xdelta-lib* sub-directory.
 
-You can also obtain a pre-compiled version here: **TODO**
+`./xdelta-lib/build-windows.bat`
+
+You can also obtain a [pre-compiled version](https://ci.appveyor.com/project/fkollmann/go-xdelta/build/artifacts).
 
 ## Build Status
 
@@ -93,7 +93,8 @@ The current status of the *master* branch:
 | OS | Status |
 | --- | --- |
 | Windows AMD64 | [![Build status](https://ci.appveyor.com/api/projects/status/w8cqnh1a2a23kkov/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
-| Ubuntu 16 AMD64 | [![Build status](https://ci.appveyor.com/api/projects/status/907d9w99x0pvlf0k/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-d0wsq/branch/master) |
+| Ubuntu 18 AMD64 | [![Build status](https://ci.appveyor.com/api/projects/status/907d9w99x0pvlf0k/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-d0wsq/branch/master) |
+| macOS AMD64 | supported, but no CI |
 
 ## Authors
 
