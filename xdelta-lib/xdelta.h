@@ -22,6 +22,8 @@
     #define SIZEOF_UNSIGNED_LONG_LONG 8
 #endif
 
+#define _ALLOW_KEYWORD_MACROS // disable fatal error C1189: The C++ Standard Library forbids macroizing keywords. Enable warning C4005 to find the forbidden macro.
+
 extern "C" {
 
 #include "xdelta3/xdelta3.h"
