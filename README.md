@@ -62,7 +62,7 @@ The easiest way to track the progress is for encoding/creating to determine how 
 
 ## Building
 
-The project requires the *xdelta-lib* native C++ library to be built into a DLL/.so/.dynlib file, before it will work. See *Native Library* below for details.
+> On Windows, the project requires the *xdelta-lib* native C++ library to be built into a DLL file, before it will work. See *Native Library* below for details. (This is not needed for macOS and Linux.)
 
 To build this project, simply run the following command:
 
