@@ -1,9 +1,9 @@
-// +build !windows
+// +build cgo
 
 package lib
 
-// #cgo CFLAGS: -I src -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
-// #cgo CXXFLAGS: -I src -Wno-literal-suffix -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700
+// #cgo CFLAGS: -I src -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
+// #cgo CXXFLAGS: -I src -Wno-literal-suffix -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 -DWINVER=0x0601 -D_WIN32_WINNT=0x0601
 //
 // #include <stdlib.h>
 //

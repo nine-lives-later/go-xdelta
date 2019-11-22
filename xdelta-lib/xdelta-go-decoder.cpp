@@ -1,4 +1,4 @@
-// +build !windows
+// +build cgo
 
 #include "xdelta-warnings.h"
 #include "xdelta.h"
