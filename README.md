@@ -62,7 +62,7 @@ The easiest way to track the progress is for encoding/creating to determine how 
 
 ## Building
 
-> On Windows, the project requires the *xdelta-lib* native C++ library to be built into a DLL file, before it will work. See *Native Library* below for details. (This is not needed for macOS and Linux.)
+> On Windows (with CGO disabled), the project requires the *xdelta-lib* native C++ library to be built into a DLL file, before it will work. See *Native Library* below for details. (This is not needed for macOS and Linux.)
 
 To build this project, simply run the following command:
 
@@ -79,7 +79,7 @@ go test -v
 
 ## Native Library (Windows only)
 
-On Windows, no CGO is used. Instead the native library has to be built separately and provided in your project's directory.
+On Windows (with `CGO_ENABLED` environment variable set to `0`) the native library has to be built separately and provided in your project's directory.
 
 To build it, run the build script. The native library is saved in the *xdelta-lib* sub-directory.
 
@@ -93,10 +93,10 @@ The current status of the *master* branch:
 
 | OS | CGO_ENABLED | Status |
 | --- | --- | --- |
-| Windows AMD64 | no | [![Build status](https://ci.appveyor.com/api/projects/status/w8cqnh1a2a23kkov/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
-| Windows AMD64 | yes | [![Build status](https://ci.appveyor.com/api/projects/status/mav2cgto6ahvaavq/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
-| Ubuntu 18 AMD64 | yes | [![Build status](https://ci.appveyor.com/api/projects/status/907d9w99x0pvlf0k/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-d0wsq/branch/master) |
-| macOS AMD64 | yes | [![Build status](https://ci.appveyor.com/api/projects/status/i7xm789ak5lyq5l7/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-2b8av/branch/master) |
+| Windows AMD64 | 0 | [![Build status](https://ci.appveyor.com/api/projects/status/w8cqnh1a2a23kkov/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
+| Windows AMD64 | 1 | [![Build status](https://ci.appveyor.com/api/projects/status/mav2cgto6ahvaavq/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta/branch/master) |
+| Ubuntu 18 AMD64 | 1 (default) | [![Build status](https://ci.appveyor.com/api/projects/status/907d9w99x0pvlf0k/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-d0wsq/branch/master) |
+| macOS AMD64 | 1 (default) | [![Build status](https://ci.appveyor.com/api/projects/status/i7xm789ak5lyq5l7/branch/master?svg=true)](https://ci.appveyor.com/project/fkollmann/go-xdelta-2b8av/branch/master) |
 
 ## Authors
 
