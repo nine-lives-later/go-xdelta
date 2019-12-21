@@ -85,12 +85,7 @@ func EncoderInit(handle unsafe.Pointer, blockSizeKB int, fileId string, hasSourc
 	fileIdStr := C.CString(fileId)
 	defer C.CFree(fileIdStr)
 
-	var hasSourceInt C.int = 0
-	if hasSource {
-		hasSourceInt = 1
-	}
-
-	return toError(C.goXdeltaEncoderInit(handle, C.int(blockSizeKB), fileIdStr, hasSourceInt))
+	return toError(C.goXdeltaEncoderInit(handle, C.int(blockSizeKB), fileIdStr, boolToInt(hasSource)))
 }
 
 func EncoderSetHeader(handle unsafe.Pointer, data unsafe.Pointer, dataLen int) error {
@@ -108,12 +103,7 @@ func EncoderProcess(handle unsafe.Pointer) (XdeltaState, error) {
 }
 
 func EncoderProvideInputData(handle unsafe.Pointer, data unsafe.Pointer, dataLen int, isFinal bool) error {
-	var isFinalInt C.int = 0
-	if isFinal {
-		isFinalInt = 1
-	}
-
-	return toError(C.goXdeltaEncoderProvideInputData(handle, (*C.char)(data), C.int(dataLen), isFinalInt))
+	return toError(C.goXdeltaEncoderProvideInputData(handle, (*C.char)(data), C.int(dataLen), boolToInt(isFinal)))
 }
 
 func EncoderGetOutputRequest(handle unsafe.Pointer) (int, error) {
@@ -182,12 +172,7 @@ func DecoderInit(handle unsafe.Pointer, blockSizeKB int, fileId string, hasSourc
 	fileIdStr := C.CString(fileId)
 	defer C.CFree(fileIdStr)
 
-	var hasSourceInt C.int = 0
-	if hasSource {
-		hasSourceInt = 1
-	}
-
-	return toError(C.goXdeltaDecoderInit(handle, C.int(blockSizeKB), fileIdStr, hasSourceInt))
+	return toError(C.goXdeltaDecoderInit(handle, C.int(blockSizeKB), fileIdStr, boolToInt(hasSource)))
 }
 
 func DecoderProcess(handle unsafe.Pointer) (XdeltaState, error) {
@@ -201,12 +186,7 @@ func DecoderProcess(handle unsafe.Pointer) (XdeltaState, error) {
 }
 
 func DecoderProvideInputData(handle unsafe.Pointer, data unsafe.Pointer, dataLen int, isFinal bool) error {
-	var isFinalInt C.int = 0
-	if isFinal {
-		isFinalInt = 1
-	}
-
-	err := toError(C.goXdeltaDecoderProvideInputData(handle, (*C.char)(data), C.int(dataLen), isFinalInt))
+	err := toError(C.goXdeltaDecoderProvideInputData(handle, (*C.char)(data), C.int(dataLen), boolToInt(isFinal)))
 	if err != nil {
 		return err
 	}
@@ -264,4 +244,12 @@ func toError(ret C.XdeltaError) error {
 	}
 
 	return r
+}
+
+func boolToInt(b bool) C.int {
+	if b {
+		return 1
+	}
+
+	return 0
 }
