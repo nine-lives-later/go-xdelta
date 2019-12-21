@@ -71,14 +71,14 @@ func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
 
 	buf := make([]byte, 64*1024)
 
-	fromBlocks := int(1024 + rand.Int31n(1024))
-	toBlocks := int(1024 + rand.Int31n(1024))
+	fromBlocks := 1024 + rand.Intn(1024)
+	toBlocks := 1024 + rand.Intn(1024)
 
 	t.Logf("FROM file size: %v (%v)", fromBlocks*len(buf), humanize.Bytes(uint64(fromBlocks*len(buf))))
 	t.Logf("TO file size: %v (%v)", toBlocks*len(buf), humanize.Bytes(uint64(toBlocks*len(buf))))
 
-	fromSkipMod := int(3 + rand.Int31n(10))
-	toSkipMod := int(3 + rand.Int31n(10))
+	fromSkipMod := 3 + rand.Intn(10)
+	toSkipMod := 3 + rand.Intn(10)
 
 	// start seeding
 	maxBlocks := fromBlocks
@@ -95,12 +95,16 @@ func testFullRoundtrip_Seed(t *testing.T, ctx *testFullRoundtrip_Context) {
 		}
 
 		if (block%fromSkipMod != 0) && (block < fromBlocks) {
-			fromFile.Write(buf)
+			wbuf := buf[:rand.Intn(len(buf))]
+
+			fromFile.Write(wbuf)
 		}
 
 		if (block%toSkipMod != 0) && (block < toBlocks) {
-			toFile.Write(buf)
-			toHash.Write(buf)
+			wbuf := buf[:rand.Intn(len(buf))]
+
+			toFile.Write(wbuf)
+			toHash.Write(wbuf)
 		}
 	}
 
