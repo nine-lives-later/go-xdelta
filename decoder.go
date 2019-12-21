@@ -198,8 +198,8 @@ func (enc *Decoder) Process(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("Failed to request data for FROM/source file: %v", err)
 			}
-			if blocksize > len(enc.sourceBuffer) {
-				return fmt.Errorf("Failed to request data for FROM/source file: source buffer overflow (%v > %v)", blocksize, len(enc.sourceBuffer))
+			if blocksize != len(enc.sourceBuffer) {
+				return fmt.Errorf("Failed to request data for FROM/source file: source buffer does not match block size (%v != %v)", blocksize, len(enc.sourceBuffer))
 			}
 
 			_, err = enc.sourceFile.Seek(int64(blockno)*int64(blocksize), io.SeekStart)

@@ -119,6 +119,8 @@ XdeltaError XdeltaEncoder::provideSourceData(const char* ptr, int length) {
         return XdeltaError_ArgumentNull;
     if (length < 0)
         return XdeltaError_ArgumentOutOfRange;
+    if (length > _source.blksize)
+        return XdeltaError_ArgumentOutOfRange;
 
     _source.curblkno = _source.getblkno;
     _source.curblk = (uint8_t*)ptr;
