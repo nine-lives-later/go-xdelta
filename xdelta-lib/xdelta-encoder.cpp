@@ -17,6 +17,9 @@ XdeltaError XdeltaEncoder::init(int blockSizeKB, const char* fileId, bool hasSou
     _config.winsize = blockSizeKB * 1024;
     _config.flags = 0;
 
+    if (_config.winsize > XD3_HARDMAXWINSIZE)
+        return XdeltaError_ArgumentOutOfRange;
+
 	auto r = xd3_config_stream(&_stream, &_config);
 
     if (r != XdeltaError_OK)
