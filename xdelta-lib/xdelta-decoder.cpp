@@ -16,7 +16,7 @@ XdeltaError XdeltaDecoder::init(int blockSizeKB, const char* fileId, bool hasSou
         blockSizeKB = (8 * 1024); // 8 MB
     
     _config.winsize = blockSizeKB * 1024;
-    _config.flags = XD3_NOCOMPRESS;
+    _config.flags = 0;
 
 	auto r = xd3_config_stream(&_stream, &_config);
 
