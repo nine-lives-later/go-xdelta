@@ -133,6 +133,9 @@ func (enc *Encoder) Process(ctx context.Context) error {
 			if n <= 0 { // no more data?
 				isFinal = true
 			}
+			if enc.stats != nil {
+				enc.stats.addDataBytes(state, n)
+			}
 
 			err = lib.EncoderProvideInputData(enc.handle, unsafe.Pointer(&enc.inputBuffer[0]), n, isFinal)
 			if err != nil {
@@ -164,6 +167,9 @@ func (enc *Encoder) Process(ctx context.Context) error {
 			if written < length {
 				return fmt.Errorf("Failed to write data to PATCH/output file: not enough data written (%v < %v)", written, length)
 			}
+			if enc.stats != nil {
+				enc.stats.addDataBytes(state, written)
+			}
 			break
 
 		case lib.XdeltaState_GETSRCBLK:
@@ -188,6 +194,9 @@ func (enc *Encoder) Process(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("Failed to read from FROM/source file: %v", err)
 			}
+			if enc.stats != nil {
+				enc.stats.addDataBytes(state, n)
+			}
 
 			err = lib.EncoderProvideSourceData(enc.handle, unsafe.Pointer(&enc.sourceBuffer[0]), n)
 			if err != nil {
@@ -195,8 +204,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 			}
 			break
 
-		case lib.XdeltaState_WINSTART:
-		case lib.XdeltaState_WINFINISH:
+		case lib.XdeltaState_WINSTART, lib.XdeltaState_WINFINISH:
 			break
 
 		default:
