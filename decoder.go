@@ -165,7 +165,9 @@ func (enc *Decoder) Process(ctx context.Context) error {
 			if err != nil {
 				return fmt.Errorf("Failed to request header from PATCH/output file: %v", err)
 			}
+
 			if length <= 0 { // nothing to write?
+				enc.Header <- make([]byte, 0)
 				break
 			}
 
