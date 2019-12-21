@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"time"
 	"unsafe"
 
 	"github.com/konsorten/go-xdelta/xdelta-lib"
@@ -17,6 +18,7 @@ type Decoder struct {
 	inputFile  io.Reader
 	sourceFile io.ReadSeeker
 	outputFile io.Writer
+	stats      *Stats
 
 	inputBuffer  []byte
 	sourceBuffer []byte
@@ -32,6 +34,8 @@ type DecoderOptions struct {
 	FromFile  io.ReadSeeker
 	ToFile    io.Writer
 	PatchFile io.Reader
+
+	EnableStats bool
 }
 
 func NewDecoder(options DecoderOptions) (*Decoder, error) {
@@ -67,6 +71,10 @@ func NewDecoder(options DecoderOptions) (*Decoder, error) {
 		ret.sourceBuffer = make([]byte, options.BlockSizeKB*1024)
 	}
 
+	if options.EnableStats {
+		ret.stats = newStats()
+	}
+
 	// ensure shutdown
 	runtime.SetFinalizer(ret, freeDecoder)
 
@@ -77,10 +85,22 @@ func (enc *Decoder) GetStreamError() error {
 	return lib.DecoderGetStreamError(enc.handle)
 }
 
+func (enc *Decoder) DumpStatsToStdout() {
+	if enc.stats != nil {
+		enc.stats.DumpToStdout()
+	}
+}
+
 func (enc *Decoder) Process(ctx context.Context) error {
 	var isFinal bool
+	var perfStart time.Time
 
 	for {
+		// prepare gathering stats
+		if enc.stats != nil {
+			perfStart = time.Now()
+		}
+
 		// retrieve the current state
 		state, err := lib.DecoderProcess(enc.handle)
 		if err != nil {
@@ -194,6 +214,11 @@ func (enc *Decoder) Process(ctx context.Context) error {
 
 		default:
 			return fmt.Errorf("Unknown state: %v", state)
+		}
+
+		// measure time
+		if enc.stats != nil {
+			enc.stats.addStateTime(state, time.Since(perfStart))
 		}
 
 		// check if cancelled

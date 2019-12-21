@@ -23,6 +23,26 @@ const (
 	XdeltaState_SeeGoError XdeltaState = -17800 /* an error happend, see the returned Go error */
 )
 
+
+func (e XdeltaState) String() string {
+	switch e {
+	case XdeltaState_INPUT:
+		return "INPUT"
+	case XdeltaState_OUTPUT:
+		return "OUTPUT"
+	case XdeltaState_GETSRCBLK:
+		return "GETSRCBLK"
+	case XdeltaState_GOTHEADER:
+		return "GOTHEADER"
+	case XdeltaState_WINSTART:
+		return "WINSTART"
+	case XdeltaState_WINFINISH:
+		return "WINFINISH"
+	}
+
+	return fmt.Sprintf("Unknown state: %v", int(e))
+}
+
 type XdeltaError int32
 
 const (

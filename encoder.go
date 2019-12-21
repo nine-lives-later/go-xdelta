@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"runtime"
+	"time"
 	"unsafe"
 
 	"github.com/konsorten/go-xdelta/xdelta-lib"
@@ -17,6 +18,7 @@ type Encoder struct {
 	inputFile  io.Reader
 	sourceFile io.ReadSeeker
 	patchFile  io.Writer
+	stats      *Stats
 
 	inputBuffer  []byte
 	sourceBuffer []byte
@@ -32,6 +34,8 @@ type EncoderOptions struct {
 	PatchFile io.Writer
 
 	Header []byte
+
+	EnableStats bool
 }
 
 func NewEncoder(options EncoderOptions) (*Encoder, error) {
@@ -77,6 +81,10 @@ func NewEncoder(options EncoderOptions) (*Encoder, error) {
 		ret.sourceBuffer = make([]byte, options.BlockSizeKB*1024)
 	}
 
+	if options.EnableStats {
+		ret.stats = newStats()
+	}
+
 	// ensure shutdown
 	runtime.SetFinalizer(ret, freeEncoder)
 
@@ -87,10 +95,22 @@ func (enc *Encoder) GetStreamError() error {
 	return lib.EncoderGetStreamError(enc.handle)
 }
 
+func (enc *Encoder) DumpStatsToStdout() {
+	if enc.stats != nil {
+		enc.stats.DumpToStdout()
+	}
+}
+
 func (enc *Encoder) Process(ctx context.Context) error {
 	var isFinal bool
+	var perfStart time.Time
 
 	for {
+		// prepare gathering stats
+		if enc.stats != nil {
+			perfStart = time.Now()
+		}
+
 		// retrieve the current state
 		state, err := lib.EncoderProcess(enc.handle)
 		if err != nil {
@@ -169,7 +189,7 @@ func (enc *Encoder) Process(ctx context.Context) error {
 				return fmt.Errorf("Failed to read from FROM/source file: %v", err)
 			}
 
-			err = lib.EncoderProvideSourceData(enc.handle,unsafe.Pointer(&enc.sourceBuffer[0]), n)
+			err = lib.EncoderProvideSourceData(enc.handle, unsafe.Pointer(&enc.sourceBuffer[0]), n)
 			if err != nil {
 				return fmt.Errorf("Failed to provide data from FROM/source file: %v", err)
 			}
@@ -181,6 +201,11 @@ func (enc *Encoder) Process(ctx context.Context) error {
 
 		default:
 			return fmt.Errorf("Unknown state: %v", state)
+		}
+
+		// measure time
+		if enc.stats != nil {
+			enc.stats.addStateTime(state, time.Since(perfStart))
 		}
 
 		// check if cancelled
