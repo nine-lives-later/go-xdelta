@@ -87,6 +87,13 @@ To build it, run the build script. The native library is saved in the *xdelta-li
 
 You can also obtain a [pre-compiled version](https://github.com/konsorten/go-xdelta/releases).
 
+Please keep in mind that creating patches with this version is 1:3 times slower (via `go test -v`): 
+
+| Function | `CGO_ENABLED=0` | `CGO_ENABLED=1` |
+| --- | --- | --- |
+| Create Patch | 2.62s | 1.02s |
+| Apply Patch | 0.18s | 0.14s |
+
 ## Build Status
 
 The current status of the *master* branch:
