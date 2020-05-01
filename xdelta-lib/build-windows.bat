@@ -6,6 +6,8 @@ setlocal
 
 if exist "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC" (
     call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+) else if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" (
+    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
 )
 
 if exist "C:\BuildTools\VC" (
@@ -17,8 +19,6 @@ cl.exe /nologo /I src /MT /LD /GL /Fe:go-xdelta-lib.dll xdelta.cpp xdelta-encode
 del /q go-xdelta-lib.lib go-xdelta-lib.exp *.obj
 
 REM dumpbin.exe /nologo /exports go-xdelta-lib.dll
-
-powershell.exe -ExecutionPolicy Unrestricted -File build-windows-write-version.ps1
 
 endlocal
 
