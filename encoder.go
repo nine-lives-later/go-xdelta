@@ -8,7 +8,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/konsorten/go-xdelta/xdelta-lib"
+	"github.com/nine-lives-later/go-xdelta/xdelta-lib"
 )
 
 type Encoder struct {

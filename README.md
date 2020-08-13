@@ -2,7 +2,7 @@
 
 This library provides a wrapper for the [Xdelta library](http://xdelta.org/) by Joshua MacDonald and others. 
 
-**[Click here to open the GoDoc documentation.](https://godoc.org/github.com/konsorten/go-xdelta)**
+**[Click here to open the GoDoc documentation.](https://godoc.org/github.com/nine-lives-later/go-xdelta)**
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ There is no process for deleting files (see *Best Practices* below).
 The following example is more or less pseudo-code. (It should be easy enough to understand.)
 
 ```go
-import "github.com/konsorten/go-xdelta"
+import "github.com/nine-lives-later/go-xdelta"
 
 options := xdelta.EncoderOptions{
     FileID:    "myfile.ext",
@@ -85,7 +85,7 @@ To build it, run the build script. The native library is saved in the *xdelta-li
 
 `./xdelta-lib/build-windows.bat`
 
-You can also obtain a [pre-compiled version](https://github.com/konsorten/go-xdelta/releases).
+You can also obtain a [pre-compiled version](https://github.com/nine-lives-later/go-xdelta/releases).
 
 Please keep in mind that creating patches with this version is 1:3 times slower (via `go test -v`): 
 
