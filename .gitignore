@@ -1,3 +1,6 @@
 go-xdelta-lib.dll
 
 debug.test
+
+.idea/
+.vscode/
